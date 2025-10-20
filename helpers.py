@@ -7,6 +7,7 @@ import pandas as pd
 from collections import Counter
 from sklearn.preprocessing import LabelEncoder
 import wfdb as wf
+from wfdb.processing import normalize_bound
 
 # also calculate the Heart-Rate in beats per minute(BPM) for given duration
 # if there are b beats in a in t sec duration then
@@ -17,7 +18,6 @@ import wfdb as wf
 BASIC_SRATE = 128 #Hz
 
 mit_mve_labs_dict = {'(AFIB\x00':0, '(ASYS\x00':1, '(B\x00':2, '(BI\x00':3, '(HGEA\x00':4, '(N\x00':5, '(NSR\x00':5, '(NOD\x00':6, '(NOISE\x00':7, '(PM\x00':8, '(SBR\x00':9, '(SVTA\x00':10, '(VER\x00':11, '(VF\x00':12, '(VFIB\x00':12, '(VFL\x00':13, '(VT\x00':14}
-
 
 def data_split(iSignal, iRpeaks, iLabels, inRpeaks, inLabels):
     split_data = []
@@ -84,12 +84,19 @@ def get_data():
     mit_arr_sigs, mit_arr_labs = load_data('mit-bih-arr', 'atr')
 
     #normalize signals
-    mit_mve_sigs = wf.normalize_bound(mit_mve_sigs, lb=0, ub=1)
-    mit_sad_sigs = wf.normalize_bound(mit_sad_sigs, lb=0, ub=1)
-    mit_arr_sigs = wf.normalize_bound(mit_arr_sigs, lb=0, ub=1)
+    for ind, item in enumerate(mit_mve_sigs):
+        mit_mve_sigs[ind] = normalize_bound(item.p_signal, lb=0, ub=1)
+    
+    for ind, item in enumerate(mit_sad_sigs):
+        mit_sad_sigs[ind] = normalize_bound(item, lb=0, ub=1)
+
+    for ind, item in enumerate(mit_arr_sigs):
+        mit_arr_sigs[ind] = normalize_bound(item, lb=0, ub=1)
+
 
     #resample signals to 128hz
 
+    ann= np.loadtxt(f'./datasets/mit-bih-sad/ANNOTATORS', dtype='str',delimiter="\t")
     print(mit_mve_sigs)
 
 
