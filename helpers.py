@@ -7,7 +7,7 @@ import pandas as pd
 from collections import Counter
 from sklearn.preprocessing import LabelEncoder
 import wfdb as wf
-from wfdb.processing import normalize_bound
+from wfdb.processing import normalize_bound, resample_singlechan, resample_ann
 
 # also calculate the Heart-Rate in beats per minute(BPM) for given duration
 # if there are b beats in a in t sec duration then
@@ -63,17 +63,22 @@ def load_data(record, atr):
     for i in records:
         sigs.append(wf.rdrecord(f'./datasets/{record}/{str(i)}'))
         aux = wf.rdann(f'./datasets/{record}/{str(i)}', atr)
-        for ind,d in enumerate(aux.aux_note):
-            match record:
-                case 'mit-bih-mve':
+        match record:
+            case 'mit-bih-mve':
+                for ind,d in enumerate(aux.aux_note):    
                     aux.aux_note[ind] = mit_mve_labs_dict[d]
                     break
-                case 'mit-bih-sad': #! This dataset has labels on aux.symbol 
+            case 'mit-bih-sad': #! This dataset has labels on aux.symbol 
+                for ind,d in enumerate(aux.symbol):    
+                    #aux.aux_note[ind] = mit_mve_labs_dict[d]
                     pass
-                    break
-                case 'mit-bih-arr': #! This dataset has labels on aux.symbol 
+                break
+            case 'mit-bih-arr': #! This dataset has labels on aux.symbol 
+                for ind,d in enumerate(aux.symbol):    
+                    #aux.aux_note[ind] = mit_mve_labs_dict[d]
                     pass
-                    break
+                break
+
         labs.append(aux)
     return (sigs, labs)
 
@@ -83,21 +88,23 @@ def get_data():
     mit_sad_sigs, mit_sad_labs = load_data('mit-bih-sad', 'atr')
     mit_arr_sigs, mit_arr_labs = load_data('mit-bih-arr', 'atr')
 
-    #normalize signals
+    #normalize signals and resample to 128hz
     for ind, item in enumerate(mit_mve_sigs):
         mit_mve_sigs[ind] = normalize_bound(item.p_signal, lb=0, ub=1)
+        x = mit_mve_sigs[ind][:,0]
+        mit_mve_sigs[ind], mit_mve_labs[ind] = resample_singlechan(x, mit_mve_labs[ind], 250, 128)
     
     for ind, item in enumerate(mit_sad_sigs):
-        mit_sad_sigs[ind] = normalize_bound(item, lb=0, ub=1)
+        mit_sad_sigs[ind] = normalize_bound(item.p_signal, lb=0, ub=1)
+
 
     for ind, item in enumerate(mit_arr_sigs):
-        mit_arr_sigs[ind] = normalize_bound(item, lb=0, ub=1)
+        mit_arr_sigs[ind] = normalize_bound(item.p_signal, lb=0, ub=1)
+        mit_mve_sigs[ind] = resample_singlechan(mit_arr_sigs[ind], mit_arr_labs[ind], 360, 128)
 
-
-    #resample signals to 128hz
 
     ann= np.loadtxt(f'./datasets/mit-bih-sad/ANNOTATORS', dtype='str',delimiter="\t")
-    print(mit_mve_sigs)
+    print(ann)
 
 
 def split_data():
