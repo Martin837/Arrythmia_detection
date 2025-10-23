@@ -19,7 +19,29 @@ BASIC_SRATE = 128 #Hz
 
 mit_mve_labs_dict = {'(AFIB\x00':0, '(ASYS\x00':1, '(B\x00':2, '(BI\x00':3, '(HGEA\x00':4, '(N\x00':5, '(NSR\x00':5, '(NOD\x00':6, '(NOISE\x00':7, '(PM\x00':8, '(SBR\x00':9, '(SVTA\x00':10, '(VER\x00':11, '(VF\x00':12, '(VFIB\x00':12, '(VFL\x00':13, '(VT\x00':14}
 
-other_dict = {'+':0,'Q':1, 'a':2, 'N':3, 'J':4, 'B':5, '|':6} #TODO continue this
+other_dict = {
+    "[": 1,
+    "!": 1,
+    "]": 1,
+    "V": 2,
+    "F": 3,
+    "E": 4,
+    "A": 5,
+    "a": 6,
+    "J": 7,
+    "S": 8,
+    "x": 9,
+    "e": 10,
+    "j": 11,
+    "L": 12,
+    "R": 13,
+    "/": 14,
+    "f": 15,
+    "N": 16,
+    "Q": 17,
+    "|": 18
+}
+
 def data_split(iSignal, iRpeaks, iLabels, inRpeaks, inLabels):
     split_data = []
     split_rpeaks = []
@@ -98,12 +120,10 @@ def get_data():
 
     #normalize signals and resample to 128hz
     for ind, item in enumerate(mit_mve_sigs):
-        mit_mve_sigs[ind] = normalize_bound(item.p_signal, lb=0, ub=1)
-        x = mit_mve_sigs[ind][:,0]
-        mit_mve_sigs[ind], mit_mve_labs[ind] = resample_singlechan(x, mit_mve_labs[ind], 250, 128)
-
-    ann= np.loadtxt(f'./datasets/mit-bih-sad/ANNOTATORS', dtype='str',delimiter="\t")
-    print(ann)
+        mit_mve_sigs[ind], mit_mve_labs[ind] = resample_singlechan(item.p_signal, mit_mve_labs[ind], 250, 128)
+        mit_mve_sigs[ind] = normalize_bound(mit_mve_sigs[ind], lb=0, ub=1)
+        #x = mit_mve_sigs[ind][:,0] #!Test if this works
+        
 
     for ind, item in enumerate(mit_sad_sigs):
         mit_sad_sigs[ind] = normalize_bound(item.p_signal, lb=0, ub=1)
